@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: zitda-sentinelflow
+    env: static
+    buildCommand: npm run build
+    publishPath: dist
