@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSimulation();
   setupTableFilters();
   setupReportAction();
+  setupExportActions();
 });
 
 function setupLogin() {
@@ -102,6 +103,7 @@ function setupLogin() {
     document.getElementById('metric-score').textContent = '100%';
     document.getElementById('file-details').style.display = 'none';
     document.getElementById('alert-tab-badge').style.display = 'none';
+    document.getElementById('export-actions-group').style.display = 'none';
     
     // Reset file details inputs
     document.getElementById('pcap-file-input').value = '';
@@ -232,6 +234,9 @@ function processPcapBuffer(buffer) {
   selectedPacketId = null;
   resetFilterInputs();
   renderPacketList();
+
+  // Show export actions group
+  document.getElementById('export-actions-group').style.display = 'flex';
   
   // Clear inspectors
   document.getElementById('inspector-tree-container').innerHTML = `
@@ -753,4 +758,63 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+// ==========================================================
+// 9. Structured Data Export Actions (JSON & CSV)
+// ==========================================================
+function setupExportActions() {
+  const jsonBtn = document.getElementById('export-json-btn');
+  const csvBtn = document.getElementById('export-csv-btn');
+
+  jsonBtn.addEventListener('click', () => {
+    if (allAlerts.length === 0) {
+      alert("No security alerts available to export.");
+      return;
+    }
+    const dataStr = JSON.stringify(allAlerts, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `zitda_alerts_export_${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+
+  csvBtn.addEventListener('click', () => {
+    if (allPackets.length === 0) {
+      alert("No parsed packets available to export.");
+      return;
+    }
+
+    const headers = ['Packet ID', 'Timestamp', 'Source IP', 'Destination IP', 'Protocol', 'Length', 'Info', 'Threat Status'];
+    const csvRows = [headers.join(',')];
+
+    allPackets.forEach(pkt => {
+      const alertForPkt = allAlerts.find(a => a.packetId === pkt.id);
+      const threatStatus = alertForPkt ? alertForPkt.severity : 'Clean';
+      
+      const values = [
+        pkt.id,
+        pkt.timestamp,
+        pkt.srcIp,
+        pkt.dstIp,
+        pkt.protocol,
+        pkt.length,
+        `"${pkt.info.replace(/"/g, '""')}"`,
+        threatStatus
+      ];
+      csvRows.push(values.join(','));
+    });
+
+    const csvData = csvRows.join('\n');
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `zitda_packets_export_${Date.now()}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  });
 }

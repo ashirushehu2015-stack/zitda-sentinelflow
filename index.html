@@ -107,6 +107,16 @@
           <div id="file-details" class="card" style="margin: 0; padding: 0.75rem 1.25rem; display: none; font-size: 0.85rem; border-color: var(--zitda-green);">
             <strong style="color: var(--zitda-green)">Loaded:</strong> <span id="file-name-span">None</span>
           </div>
+          <div id="export-actions-group" style="display: none; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <button class="btn" id="export-json-btn" style="border-color: var(--zitda-blue); color: var(--zitda-blue); padding: 0.75rem 1rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Export Alerts (JSON)
+            </button>
+            <button class="btn" id="export-csv-btn" style="border-color: var(--zitda-blue); color: var(--zitda-blue); padding: 0.75rem 1rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Export Packets (CSV)
+            </button>
+          </div>
         </div>
 
         <!-- Metrics Cards -->
