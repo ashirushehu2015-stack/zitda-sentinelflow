@@ -171,8 +171,84 @@ function setupUploader() {
 }
 
 function handlePcapFile(file) {
+  if (file.name.endsWith('.json')) {
+    // Show JSON loading status
+    document.getElementById('file-name-span').textContent = `${file.name} (Saved Audit Logs)`;
+    document.getElementById('file-details').style.display = 'inline-block';
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const text = e.target.result;
+        const alerts = JSON.parse(text);
+        if (!Array.isArray(alerts)) {
+          throw new Error("Invalid Session File: Data must be a JSON array of alerts.");
+        }
+        
+        // Load the saved alerts
+        allPackets = [];
+        filteredPackets = [];
+        allAlerts = alerts;
+        
+        // Update dashboard metrics
+        document.getElementById('metric-total-packets').textContent = 'N/A';
+        document.getElementById('metric-total-volume').textContent = 'N/A';
+        document.getElementById('metric-alerts').textContent = allAlerts.length;
+        
+        // Compliance Score Calculation for loaded alerts
+        const criticalCount = allAlerts.filter(a => a.severity === 'CRITICAL').length;
+        const warningCount = allAlerts.filter(a => a.severity === 'WARNING').length;
+        const rawScore = 100 - (criticalCount * 15) - (warningCount * 5);
+        const score = Math.max(10, rawScore);
+        const scoreEl = document.getElementById('metric-score');
+        scoreEl.textContent = score + "%";
+        if (score >= 80) scoreEl.style.color = 'var(--zitda-green)';
+        else if (score >= 50) scoreEl.style.color = 'var(--zitda-gold)';
+        else scoreEl.style.color = 'var(--zitda-crimson)';
+        
+        // Update tab badge for alerts
+        const badge = document.getElementById('alert-tab-badge');
+        if (allAlerts.length > 0) {
+          badge.textContent = allAlerts.length;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+        
+        // Update charts
+        updateCharts([], allAlerts);
+        
+        // Render alerts list
+        renderAlertsBoard();
+        
+        // Reset table view
+        currentPage = 1;
+        selectedPacketId = null;
+        resetFilterInputs();
+        renderPacketList();
+        
+        // Clear inspectors
+        document.getElementById('inspector-tree-container').innerHTML = `
+          <p style="color: var(--zitda-gold); font-size: 0.85rem; font-style: italic; text-align: center; margin-top: 1rem;">
+            ℹ Session Loaded from JSON Log.<br>Packet details inspector is disabled in log-only mode.
+          </p>
+        `;
+        document.getElementById('hex-dump-content-div').textContent = "Inspectors are disabled for imported JSON logs. Load a .pcap capture to perform low-level forensics.";
+        
+        // Show export group
+        document.getElementById('export-actions-group').style.display = 'flex';
+        
+      } catch (err) {
+        alert(`JSON Session Load Error: ${err.message}`);
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+    return;
+  }
+  
   if (!file.name.endsWith('.pcap')) {
-    alert("Invalid File Type: ZITDA SentinelFlow only accepts standard binary network captures (.pcap).");
+    alert("Invalid File Type: ZITDA SentinelFlow only accepts standard binary captures (.pcap) or saved alert logs (.json).");
     return;
   }
   
